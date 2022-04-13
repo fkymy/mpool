@@ -1,19 +1,20 @@
-#include <stdlib.h>
-#include <stdio.h>
-
 #include "mpool.h"
 
 size_t default_pool_size = 256;
 uint32_t miss_limit = 8;
 
-static struct subpool *create_subpool_node (size_t size);
+static subpool_t *create_subpool_node (size_t size);
 
-struct mpool *mpool_create (size_t init_size) {
+/*
+ * Create memory pool object
+ */
+mpool_t *mpool_create (size_t init_size) {
+    // if init_size == 0, user didn't want to choose one
     if (init_size == 0) {
         init_size = default_pool_size;
     }
 
-    struct mpool *new_pool = malloc(sizeof(struct mpool));
+    mpool_t *new_pool = malloc(sizeof(mpool_t));
     if (new_pool == NULL)
         return NULL;
 
@@ -26,21 +27,27 @@ struct mpool *mpool_create (size_t init_size) {
     return new_pool;
 }
 
-void *mpool_alloc (struct mpool *source_pool, size_t size) {
-    struct subpool *curr, *last;
+/*
+ * Returns a pointer to the allocated size bytes from the given pool
+ */
+void *mpool_alloc (mpool_t *source_pool, size_t size) {
+    subpool_t *curr, *last;
     void *chunk = NULL;
 
     curr = source_pool->first;
     if (curr->misses > miss_limit) {
+        // this subpool doesn't seem to be any good anymore
         source_pool->first = source_pool->first->next;
     }
 
     do {
         if (size <= (size_t)(curr->end - curr->start)) {
+            // chop off a chunk of memory and return it
             chunk = curr->start;
             curr->start += size;
             curr->misses = 0;
         } else {
+            // current subpool is too small
             curr->misses++;
         }
 
@@ -49,6 +56,7 @@ void *mpool_alloc (struct mpool *source_pool, size_t size) {
     } while (curr != NULL && chunk == NULL);
 
     if (chunk == NULL) {
+        // none of the existing subpools had enough room, make a new one
         size_t new_size = last->size * 2;
         if (new_size <= size) {
             new_size = size * 2;
@@ -65,12 +73,15 @@ void *mpool_alloc (struct mpool *source_pool, size_t size) {
     return chunk;
 }
 
-void mpool_free (struct mpool *source_pool) {
-    struct subpool *curr, *last;
+/*
+ * Deallocate all memory pools
+ */
+void mpool_free (mpool_t *source_pool) {
+    subpool_t *curr, *last;
 
     curr = source_pool->pools;
     while (curr != NULL) {
-        free(curr->block);
+        MPOOL_FREE(curr->block);
         last = curr;
         curr = curr->next;
         free(last);
@@ -78,10 +89,13 @@ void mpool_free (struct mpool *source_pool) {
     free(source_pool);
 }
 
-struct subpool *create_subpool_node (size_t size) {
-    struct subpool *new_subpool;
+/*
+ * Used internally to allocate more pool space
+ */
+subpool_t *create_subpool_node (size_t size) {
+    subpool_t *new_subpool;
 
-    new_subpool = malloc(sizeof(struct subpool));
+    new_subpool = malloc(sizeof(subpool_t));
     if (new_subpool == NULL)
         return NULL;
 
