@@ -1,0 +1,4 @@
+*.o
+mpool_test
+a.out
+*.dSYM/
