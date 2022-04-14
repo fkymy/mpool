@@ -1,9 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include "mpool.h"
 
 size_t default_pool_size = 256;
 uint32_t miss_limit = 8;
 
-static subpool_t *create_subpool_node (size_t size);
+static subpool_t *create_subpool_node (const size_t size);
 
 /*
  * Create memory pool object
@@ -14,25 +16,24 @@ mpool_t *mpool_create (size_t init_size) {
         init_size = default_pool_size;
     }
 
-    mpool_t *new_pool = malloc(sizeof(mpool_t));
+    mpool_t *new_pool = (mpool_t *)malloc(sizeof(mpool_t));
     if (new_pool == NULL)
         return NULL;
 
-    new_pool->pools = create_subpool_node(init_size);
-    new_pool->first = new_pool->pools;
-
-    if (new_pool->first == NULL)
+    new_pool->pools = (subpool_t *)create_subpool_node(init_size);
+    if (new_pool->pools == NULL)
         return NULL;
 
+    new_pool->first = new_pool->pools;
     return new_pool;
 }
 
 /*
  * Returns a pointer to the allocated size bytes from the given pool
  */
-void *mpool_alloc (mpool_t *source_pool, size_t size) {
-    subpool_t *curr, *last;
+void *mpool_alloc (mpool_t *source_pool, const size_t size) {
     void *chunk = NULL;
+    subpool_t *curr, *last;
 
     curr = source_pool->first;
     if (curr->misses > miss_limit) {
@@ -40,20 +41,18 @@ void *mpool_alloc (mpool_t *source_pool, size_t size) {
         source_pool->first = source_pool->first->next;
     }
 
-    do {
-        if (size <= (size_t)(curr->end - curr->start)) {
+    while (curr != NULL) {
+        if (size <= (size_t)(curr->free_end - curr->free_start)) {
             // chop off a chunk of memory and return it
-            chunk = curr->start;
-            curr->start += size;
-            curr->misses = 0;
-        } else {
-            // current subpool is too small
-            curr->misses++;
+            chunk = curr->free_start;
+            curr->free_start += size;
+            break ;
         }
-
+        // current subpool is too small
+        curr->misses++;
         last = curr;
         curr = curr->next;
-    } while (curr != NULL && chunk == NULL);
+    }
 
     if (chunk == NULL) {
         // none of the existing subpools had enough room, make a new one
@@ -66,8 +65,8 @@ void *mpool_alloc (mpool_t *source_pool, size_t size) {
         if (curr == NULL)
             return NULL;
 
-        chunk = curr->start;
-        curr->start += size;
+        chunk = curr->free_start;
+        curr->free_start += size;
     }
 
     return chunk;
@@ -81,7 +80,7 @@ void mpool_free (mpool_t *source_pool) {
 
     curr = source_pool->pools;
     while (curr != NULL) {
-        MPOOL_FREE(curr->block);
+        MPOOL_FREE(curr->mem_block);
         last = curr;
         curr = curr->next;
         free(last);
@@ -92,24 +91,26 @@ void mpool_free (mpool_t *source_pool) {
 /*
  * Used internally to allocate more pool space
  */
-subpool_t *create_subpool_node (size_t size) {
+subpool_t *create_subpool_node (const size_t size) {
     subpool_t *new_subpool;
 
-    new_subpool = malloc(sizeof(subpool_t));
+    new_subpool = (subpool_t *)malloc(sizeof(subpool_t));
     if (new_subpool == NULL)
         return NULL;
 
-    new_subpool->block = malloc(size);
-    if (new_subpool->block == NULL) {
+    new_subpool->mem_block = malloc(size);
+    if (new_subpool->mem_block == NULL) {
         free(new_subpool);
         return NULL;
     }
 
-    new_subpool->start = new_subpool->block;
-    new_subpool->end = new_subpool->block + size;
+    new_subpool->free_start = new_subpool->mem_block;
+    new_subpool->free_end = new_subpool->mem_block + size;
     new_subpool->size = size;
     new_subpool->misses = 0;
     new_subpool->next = NULL;
 
     return new_subpool;
 }
+
+

@@ -8,9 +8,10 @@ int main(int argc, char *argv[]) {
     UNUSED(argc);
     UNUSED(argv);
 
-    struct mpool *pool;
+    mpool_t *pool;
     uint32_t i, j, *toss;
 
+    printf("testing mpool\n");
     for (i = 0; i < 5000; i++) {
         pool = mpool_create(0);
         for (j = 0; j < 100000; j++) {
@@ -21,5 +22,6 @@ int main(int argc, char *argv[]) {
         }
         mpool_free(pool);
     }
+
     return 0;
 }
