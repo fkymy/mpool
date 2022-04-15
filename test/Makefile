@@ -4,7 +4,7 @@ TARGETS = mpool_test
 CC = gcc
 CFLAGS = -g -O2 -std=c99 # -DPOOL_THR_SAFE
 OBJ = mpool.o main.o
-LDLIBS = # -lcunit
+LDLIBS = -lcunit
 IFLAGS = -I..
 
 mpool_test : $(OBJ)

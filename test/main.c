@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
 #include <time.h>
+#include <CUnit/CUnit.h>
+#include <CUnit/Basic.h>
 
 #include "../mpool.h"
 #include "mlist.h"
@@ -22,11 +23,16 @@ int main(int argc, char *argv[]) {
     UNUSED(argc);
     UNUSED(argv);
 
-    mpool_test01();
-    mpool_test02();
-    mpool_test03();
-    mpool_test04();
-    mpool_test05();
+    CU_pSuite suite_mpool;
+    CU_initialize_registry();
+    suite_mpool = CU_add_suite("mpool", NULL, NULL);
+    CU_add_test(suite_mpool, "mpool_test01", mpool_test01);
+    CU_add_test(suite_mpool, "mpool_test02", mpool_test02);
+    CU_add_test(suite_mpool, "mpool_test03", mpool_test03);
+    CU_add_test(suite_mpool, "mpool_test04", mpool_test04);
+    CU_add_test(suite_mpool, "mpool_test05", mpool_test05);
+    CU_basic_run_tests();
+    CU_cleanup_registry();
 
     return EXIT_SUCCESS;
 }
@@ -44,8 +50,8 @@ static void mpool_test01(void) {
     for (int i = 0; i < 1000; i++) {
         toss = (char *)mpool_alloc(pool, sizeof(*toss));
         *toss = DTOC(i % 10);
-        assert(*toss == DTOC(i % 10));
-        assert(isaligned(toss));
+        CU_ASSERT(*toss == DTOC(i % 10));
+        CU_ASSERT(isaligned(toss));
     }
     mpool_free(pool);
 }
@@ -59,7 +65,7 @@ static void mpool_test02(void) {
         pool = mpool_create(0);
         for (j = 0; j < 100000; j++) {
             toss = mpool_alloc(pool, sizeof(uint32_t));
-            assert(isaligned(toss));
+            CU_ASSERT(isaligned(toss));
         }
         if (i % 100 == 0) {
             // printf("%d\n", i);
@@ -80,8 +86,8 @@ static void mpool_test03(void) {
     s2 = mpool_alloc(pool, strlen(s[1]) + 1);
     strcpy(s1, s[0]);
     strcpy(s2, s[1]);
-    assert(strncmp(s1, s[0], strlen(s1)) == 0);
-    assert(strncmp(s2, s[1], strlen(s2)) == 0);
+    CU_ASSERT(strncmp(s1, s[0], strlen(s1)) == 0);
+    CU_ASSERT(strncmp(s2, s[1], strlen(s2)) == 0);
     mpool_free(pool);
 }
 
@@ -144,43 +150,43 @@ static void mpool_test04(void) {
     *ipt = 33;
     *siz = 55;
     *pdt = 150;
-    assert(*b   == true);
-    assert(*s   == 2);
-    assert(*c   == 'a');
-    assert(*uc  == 'b');
-    assert(*n   == 5);
-    assert(*un  == 255);
-    assert(*l   == 550);
-    assert(*ul  == 333);
-    assert(*ll  == 950);
-    assert(*ull == 111);
-    assert(*f   == 113.5);
-    assert(*d   == 50.8);
-    assert(*ld  == 115.3);
-    assert(*t   == 123);
-    assert(*ot  == 22);
-    assert(*ipt == 33);
-    assert(*siz == 55);
-    assert(*pdt == 150);
+    CU_ASSERT(*b   == true);
+    CU_ASSERT(*s   == 2);
+    CU_ASSERT(*c   == 'a');
+    CU_ASSERT(*uc  == 'b');
+    CU_ASSERT(*n   == 5);
+    CU_ASSERT(*un  == 255);
+    CU_ASSERT(*l   == 550);
+    CU_ASSERT(*ul  == 333);
+    CU_ASSERT(*ll  == 950);
+    CU_ASSERT(*ull == 111);
+    CU_ASSERT(*f   == 113.5);
+    CU_ASSERT(*d   == 50.8);
+    CU_ASSERT(*ld  == 115.3);
+    CU_ASSERT(*t   == 123);
+    CU_ASSERT(*ot  == 22);
+    CU_ASSERT(*ipt == 33);
+    CU_ASSERT(*siz == 55);
+    CU_ASSERT(*pdt == 150);
 
-    assert(isaligned(b));
-    assert(isaligned(s));
-    assert(isaligned(c));
-    assert(isaligned(uc));
-    assert(isaligned(n));
-    assert(isaligned(un));
-    assert(isaligned(l));
-    assert(isaligned(ul));
-    assert(isaligned(ll));
-    assert(isaligned(ull));
-    assert(isaligned(f));
-    assert(isaligned(d));
-    assert(isaligned(ld));
-    assert(isaligned(t));
-    assert(isaligned(ot));
-    assert(isaligned(ipt));
-    assert(isaligned(siz));
-    assert(isaligned(pdt));
+    CU_ASSERT(isaligned(b));
+    CU_ASSERT(isaligned(s));
+    CU_ASSERT(isaligned(c));
+    CU_ASSERT(isaligned(uc));
+    CU_ASSERT(isaligned(n));
+    CU_ASSERT(isaligned(un));
+    CU_ASSERT(isaligned(l));
+    CU_ASSERT(isaligned(ul));
+    CU_ASSERT(isaligned(ll));
+    CU_ASSERT(isaligned(ull));
+    CU_ASSERT(isaligned(f));
+    CU_ASSERT(isaligned(d));
+    CU_ASSERT(isaligned(ld));
+    CU_ASSERT(isaligned(t));
+    CU_ASSERT(isaligned(ot));
+    CU_ASSERT(isaligned(ipt));
+    CU_ASSERT(isaligned(siz));
+    CU_ASSERT(isaligned(pdt));
 }
 
 static void mpool_test05(void) {
@@ -202,12 +208,12 @@ static void mpool_test05(void) {
     test->c = 'a';
     *n = 10;
 
-    assert(test->n == 5);
-    assert(test->c == 'a');
-    assert(*n == 10);
+    CU_ASSERT(test->n == 5);
+    CU_ASSERT(test->c == 'a');
+    CU_ASSERT(*n == 10);
 
-    assert(isaligned(test));
-    assert(isaligned(n));
+    CU_ASSERT(isaligned(test));
+    CU_ASSERT(isaligned(n));
 
     mpool_free(pool);
 }
