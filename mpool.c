@@ -118,7 +118,6 @@ void mpool_free (mpool_t *source_pool) {
 
 #ifdef MPOOL_THR_SAFE
     pthread_mutex_destroy(&source_pool->lock);
-/* sem_close(source_pool->lock); */
 #endif
 
     free(source_pool);
