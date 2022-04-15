@@ -2,7 +2,7 @@ VPATH = ../
 
 TARGETS = mpool_test
 CC = gcc
-CFLAGS = -g -O2 -std=c99 # -DPOOL_THR_SAFE
+CFLAGS = -g -O2 -std=c99 # -DMPOOL_THR_SAFE
 OBJ = mpool.o main.o
 LDLIBS = -lcunit
 IFLAGS = -I..

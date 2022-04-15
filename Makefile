@@ -1,6 +1,6 @@
-CC := gcc
-CFLAGS := -g -O2 -W -Wall -std=c99 # -DPOOL_THR_SAFE
-OBJ := mpool.o main.o
+CC = gcc
+CFLAGS = -g -O2 -W -Wall -std=c99 -DMPOOL_THR_SAFE
+OBJ = mpool.o main.o
 
 mpool_test : $(OBJ)
 	$(CC) $^ -o $@

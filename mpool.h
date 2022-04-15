@@ -12,14 +12,6 @@
 #define MPOOL_ALIGNMENT (sizeof(uintptr_t))
 #define MPOOL_MISS_LIMIT (8)
 
-#define MPOOL_FREE(p)           \
-    do {                        \
-        if (p != NULL) {        \
-            free(p);            \
-            (p) = NULL;         \
-        }                       \
-    } while (false)             \
-
 extern size_t default_pool_size;
 
 typedef struct subpool_t {
@@ -35,7 +27,7 @@ typedef struct mpool_t {
     subpool_t *pools;   // first element in linked list
     subpool_t *first;   // first good subpool in list
 #ifdef MPOOL_THR_SAFE
-    sem_t lock;         // mutex lock for thread safety
+    sem_t *lock;         // mutex lock for thread safety
 #endif
 } mpool_t;
 
