@@ -61,14 +61,11 @@ static void mpool_test02(void) {
     mpool_t *pool;
     uint32_t i, j, *toss;
 
-    for (i = 0; i < 1000; i++) {
+    for (i = 0; i < 10; i++) {
         pool = mpool_create(0);
         for (j = 0; j < 100000; j++) {
             toss = mpool_alloc(pool, sizeof(uint32_t));
             CU_ASSERT(isaligned(toss));
-        }
-        if (i % 100 == 0) {
-            // printf("%d\n", i);
         }
         mpool_free(pool);
     }
