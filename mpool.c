@@ -37,13 +37,9 @@ mpool_t *mpool_create (size_t init_size) {
     new_pool->first = new_pool->pools;
 
 #ifdef MPOOL_THR_SAFE
-    new_pool->lock = sem_open("/mpool", O_CREAT|O_EXCL, S_IRWXU, 1);
-    if (new_pool->lock == SEM_FAILED) {
-        mpool_free(new_pool);
-        return NULL;
-    }
-    if (sem_unlink("/mpool") == -2) {
-        mpool_free(new_pool);
+    if (pthread_mutex_init(&new_pool->lock, NULL) != 0) {
+        free(new_pool->pools);
+        free(new_pool);
         return NULL;
     }
 #endif
@@ -56,8 +52,7 @@ mpool_t *mpool_create (size_t init_size) {
  */
 void *mpool_alloc (mpool_t *source_pool, size_t size) {
 #ifdef MPOOL_THR_SAFE
-    // printf("waiting before allocing\n");
-    if (sem_wait(source_pool->lock) == -1)
+    if (pthread_mutex_lock(&source_pool->lock) != 0)
         return NULL;
 #endif
 
@@ -100,7 +95,7 @@ void *mpool_alloc (mpool_t *source_pool, size_t size) {
     }
 
 #ifdef MPOOL_THR_SAFE
-    if (sem_post(source_pool->lock) == -1)
+    if (pthread_mutex_unlock(&source_pool->lock) != 0)
         return NULL;
 #endif
 
@@ -122,7 +117,8 @@ void mpool_free (mpool_t *source_pool) {
     }
 
 #ifdef MPOOL_THR_SAFE
-    sem_close(source_pool->lock);
+    pthread_mutex_destroy(&source_pool->lock);
+/* sem_close(source_pool->lock); */
 #endif
 
     free(source_pool);

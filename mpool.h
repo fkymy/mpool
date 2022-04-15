@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 #ifdef MPOOL_THR_SAFE
-# include <semaphore.h>
+# include <pthread.h>
 #endif
 
 #define MPOOL_ALIGNMENT (sizeof(uintptr_t))
@@ -27,7 +27,7 @@ typedef struct mpool_t {
     subpool_t *pools;   // first element in linked list
     subpool_t *first;   // first good subpool in list
 #ifdef MPOOL_THR_SAFE
-    sem_t *lock;         // mutex lock for thread safety
+    pthread_mutex_t lock;
 #endif
 } mpool_t;
 

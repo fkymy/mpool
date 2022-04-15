@@ -1,9 +1,9 @@
 CC = gcc
-CFLAGS = -g -O2 -W -Wall -std=c99 -DMPOOL_THR_SAFE
+CFLAGS = -g -O2 -W -Wall -std=c99 #-DMPOOL_THR_SAFE
 OBJ = mpool.o main.o
 
 mpool_test : $(OBJ)
-	$(CC) $^ -o $@
+	$(CC) $^ -lpthread -o $@
 
 mpool.o : mpool.c mpool.h
 main.o : main.c mpool.h
