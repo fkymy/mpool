@@ -5,6 +5,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef MPOOL_THR_SAFE
+# include <semaphore.h>
+#endif
+
 #define MPOOL_ALIGNMENT (sizeof(uintptr_t))
 #define MPOOL_MISS_LIMIT (8)
 
@@ -30,6 +34,9 @@ typedef struct subpool_t {
 typedef struct mpool_t {
     subpool_t *pools;   // first element in linked list
     subpool_t *first;   // first good subpool in list
+#ifdef MPOOL_THR_SAFE
+    sem_t lock;         // mutex lock for thread safety
+#endif
 } mpool_t;
 
 /* Create a memory pool with a given initial size. If init_size is 0,

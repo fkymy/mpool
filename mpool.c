@@ -1,5 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef MPOOL_THR_SAFE
+# include <semaphore.h>
+#endif
+
 #include "mpool.h"
 
 size_t default_pool_size = 256;
@@ -24,6 +28,13 @@ mpool_t *mpool_create (size_t init_size) {
     if (new_pool == NULL)
         return NULL;
 
+#ifdef MPOOL_THR_SAFE
+    if (sem_init(&new_pool->lock, 0, 1) == -1) {
+        free(new_pool);
+        return NULL;
+    }
+#endif
+
     new_pool->pools = (subpool_t *)create_subpool_node(init_size);
     if (new_pool->pools == NULL)
         return NULL;
@@ -36,6 +47,11 @@ mpool_t *mpool_create (size_t init_size) {
  * Returns a pointer to the allocated size bytes from the given pool
  */
 void *mpool_alloc (mpool_t *source_pool, size_t size) {
+#ifdef MPOOL_THR_SAFE
+    if (sem_wait(&source_pool->lock) == -1)
+        return NULL;
+#endif
+
     void *chunk = NULL;
     subpool_t *curr, *last;
 
@@ -74,6 +90,11 @@ void *mpool_alloc (mpool_t *source_pool, size_t size) {
         curr->free_start += size;
     }
 
+#ifdef MPOOL_THR_SAFE
+    if (sem_post(&source_pool->lock) == -1)
+        return NULL;
+#endif
+
     return chunk;
 }
 
@@ -90,6 +111,11 @@ void mpool_free (mpool_t *source_pool) {
         curr = curr->next;
         free(last);
     }
+
+#ifdef MPOOL_THR_SAFE
+    sem_destroy(&souce_pool->lock);
+#endif
+
     free(source_pool);
 }
 
