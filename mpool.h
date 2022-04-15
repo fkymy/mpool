@@ -5,8 +5,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define MPOOL_POOL_SIZ   (64 * 1024)
-#define MPOOL_ALIGN_SIZE (8)
+#define MPOOL_ALIGNMENT (sizeof(uintptr_t))
+#define MPOOL_MISS_LIMIT (8)
 
 #define MPOOL_FREE(p)           \
     do {                        \
@@ -37,7 +37,7 @@ typedef struct mpool_t {
 mpool_t *mpool_create (size_t init_size);
 
 /* Returns a pointer to the allocated size bytes from the given pool */
-void *mpool_alloc (mpool_t *source_pool, const size_t size);
+void *mpool_alloc (mpool_t *source_pool, size_t size);
 
 /* Deallocate all memory pools */
 void mpool_free (mpool_t *source_pool);

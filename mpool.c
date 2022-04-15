@@ -3,17 +3,21 @@
 #include "mpool.h"
 
 size_t default_pool_size = 256;
-uint32_t miss_limit = 8;
 
+/*
+ * Used internally
+ */
 static subpool_t *create_subpool_node (const size_t size);
+static inline size_t aligned(size_t size);
 
 /*
  * Create memory pool object
  */
 mpool_t *mpool_create (size_t init_size) {
-    // if init_size == 0, user didn't want to choose one
     if (init_size == 0) {
         init_size = default_pool_size;
+    } else {
+        init_size = aligned(init_size);
     }
 
     mpool_t *new_pool = (mpool_t *)malloc(sizeof(mpool_t));
@@ -31,12 +35,13 @@ mpool_t *mpool_create (size_t init_size) {
 /*
  * Returns a pointer to the allocated size bytes from the given pool
  */
-void *mpool_alloc (mpool_t *source_pool, const size_t size) {
+void *mpool_alloc (mpool_t *source_pool, size_t size) {
     void *chunk = NULL;
     subpool_t *curr, *last;
 
+    size = aligned(size);
     curr = source_pool->first;
-    if (curr->misses > miss_limit) {
+    if (curr->misses > MPOOL_MISS_LIMIT) {
         // this subpool doesn't seem to be any good anymore
         source_pool->first = source_pool->first->next;
     }
@@ -98,7 +103,7 @@ subpool_t *create_subpool_node (const size_t size) {
     if (new_subpool == NULL)
         return NULL;
 
-    new_subpool->mem_block = malloc(size);
+    new_subpool->mem_block = (void *)malloc(size);
     if (new_subpool->mem_block == NULL) {
         free(new_subpool);
         return NULL;
@@ -113,4 +118,9 @@ subpool_t *create_subpool_node (const size_t size) {
     return new_subpool;
 }
 
-
+/**
+ * Used internally to align memory block boundary
+ */
+inline size_t aligned(size_t size) {
+    return (size + (MPOOL_ALIGNMENT - 1)) & ~(MPOOL_ALIGNMENT - 1);
+}
