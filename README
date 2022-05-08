@@ -6,8 +6,8 @@ it is useful for large tree structures that requires making a system
 call with malloc each time a new node is added.
 
 It also allows semi-automatic memory management. There is no need to
-traverse your data structures to free all of their memory, since the
-memory blocks are separately managed by mpool.
+traverse your complex data structure to free all of its memory, since
+the memory blocks are separately managed by mpool.
 
 mpool works by creating a subpool with a large chunk of memory block,
 which is given out in smaller chunks as requested. When a request exceeds
@@ -15,6 +15,6 @@ the size of a subpool (a miss), it creates a new subpool twice the size
 of the previous subpool. A subpool with too many misses is no longer
 used for subsequent requests.
 
-There is a thread safety option, but it is not tested well enough.
+There is thread safety option, but it is not recommended.
 
 
